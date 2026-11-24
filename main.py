@@ -78,10 +78,25 @@ def pick(candidates):
 def main():
     review = pick(CANDIDATES)
     import os
+    import sys
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8") as f:
         f.write(review)
     os.chmod("/output/entry.txt", 0o644)
+    # Verify the written output: read it back byte-for-byte and re-check
+    # the gate (1-200 characters, single line, non-blank). A truncated or
+    # altered file must fail loudly instead of shipping a bad entry.
+    with open("/output/entry.txt", "rb") as f:
+        written = f.read().decode("utf-8")
+    if written != review:
+        print("error: /output/entry.txt does not match selected review",
+              file=sys.stderr)
+        sys.exit(1)
+    if not (1 <= len(written) <= 200 and written.strip()
+            and "\n" not in written):
+        print("error: /output/entry.txt fails gate: "
+              f"{len(written)} chars", file=sys.stderr)
+        sys.exit(1)
     print(review)
 
 
